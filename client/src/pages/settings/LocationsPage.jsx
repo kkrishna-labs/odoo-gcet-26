@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Badge } from '../../components/ui/Badge.jsx';
@@ -20,19 +21,27 @@ import { required } from '../../utils/validation.js';
 function LocationModal({ location, defaultWarehouse, warehouseOptions, onClose, onSaved }) {
   const isNew = !location?._id;
   const form = useForm({
-    name: location?.name ?? '',
-    code: location?.code ?? '',
+    name:      location?.name ?? '',
+    code:      location?.code ?? '',
     warehouse: location?.warehouse?._id ?? defaultWarehouse ?? '',
   });
 
   const onSubmit = form.submit(
     {
       name: required('Name'),
-      code: (v) => (!v.trim() ? 'Short code is required' : /^[A-Za-z0-9_-]{1,20}$/.test(v.trim()) ? null : 'Use up to 20 letters, numbers, _ or -'),
+      code: (v) =>
+        !v.trim()
+          ? 'Short code is required'
+          : /^[A-Za-z0-9_-]{1,20}$/.test(v.trim())
+          ? null
+          : 'Up to 20 letters, numbers, _ or -',
       warehouse: required('Warehouse'),
     },
     async (values) => {
-      const payload = { name: values.name.trim(), code: values.code.trim().toUpperCase() };
+      const payload = {
+        name: values.name.trim(),
+        code: values.code.trim().toUpperCase(),
+      };
       const saved = isNew
         ? await locationApi.create({ ...payload, warehouse: values.warehouse })
         : await locationApi.update(location._id, payload);
@@ -47,19 +56,31 @@ function LocationModal({ location, defaultWarehouse, warehouseOptions, onClose, 
       title={isNew ? 'New location' : 'Edit location'}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="location-form" loading={form.submitting}>
-            Save
-          </Button>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form="location-form" loading={form.submitting}>Save</Button>
         </>
       }
     >
       <Form id="location-form" onSubmit={onSubmit}>
         {form.formError && <Alert>{form.formError}</Alert>}
-        <Input label="Name" required value={form.values.name} onChange={form.setField('name')} error={form.errors.name} autoFocus hint="e.g. Rack A, Production Floor" />
-        <Input label="Short code" required value={form.values.code} onChange={form.setField('code')} error={form.errors.code} />
+        <Input
+          label="Name"
+          required
+          value={form.values.name}
+          onChange={form.setField('name')}
+          error={form.errors.name}
+          autoFocus
+          hint="e.g. Rack A, Production Floor"
+          placeholder="Rack A"
+        />
+        <Input
+          label="Short code"
+          required
+          value={form.values.code}
+          onChange={form.setField('code')}
+          error={form.errors.code}
+          placeholder="RACK-A"
+        />
         <Select
           label="Warehouse"
           required
@@ -81,7 +102,10 @@ export default function LocationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const warehouse = searchParams.get('warehouse') ?? '';
   const warehouseOptions = useWarehouseOptions();
-  const { data, loading, error, reload } = useAsync(() => locationApi.list(warehouse ? { warehouse } : {}), [warehouse]);
+  const { data, loading, error, reload } = useAsync(
+    () => locationApi.list(warehouse ? { warehouse } : {}),
+    [warehouse]
+  );
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -111,23 +135,52 @@ export default function LocationsPage() {
       key: 'fullName',
       header: 'Location',
       render: (l) => (
-        <span className="flex items-center gap-2 font-medium text-text-strong">
-          {l.fullName}
-          {l.isDefault && <Badge tone="accent">Default</Badge>}
+        <div className="flex items-center gap-3">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-3 border border-border text-muted">
+            <MapPin className="h-3.5 w-3.5" />
+          </span>
+          <span className="flex items-center gap-2 font-semibold text-text-strong">
+            {l.fullName}
+            {l.isDefault && <Badge tone="accent">Default</Badge>}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'code',
+      header: 'Short code',
+      render: (l) => (
+        <span className="rounded-md border border-border bg-surface-3 px-2 py-0.5 text-xs font-mono text-text-strong">
+          {l.code}
         </span>
       ),
     },
-    { key: 'code', header: 'Short code' },
-    { key: 'warehouse', header: 'Warehouse', render: (l) => l.warehouse?.name },
+    {
+      key: 'warehouse',
+      header: 'Warehouse',
+      render: (l) => <span className="text-muted">{l.warehouse?.name}</span>,
+    },
     {
       key: 'actions',
       header: '',
       align: 'right',
       render: (l) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="sm" icon="edit" onClick={() => setEditing(l)} aria-label={`Edit ${l.fullName}`} />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="edit"
+            onClick={(e) => { e.stopPropagation(); setEditing(l); }}
+            aria-label={`Edit ${l.fullName}`}
+          />
           {!l.isDefault && (
-            <Button variant="ghost" size="sm" icon="trash" onClick={() => setDeleting(l)} aria-label={`Delete ${l.fullName}`} />
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="trash"
+              onClick={(e) => { e.stopPropagation(); setDeleting(l); }}
+              aria-label={`Delete ${l.fullName}`}
+            />
           )}
         </div>
       ),
@@ -135,25 +188,44 @@ export default function LocationsPage() {
   ];
 
   return (
-    <section>
-      <PageHeader title="Locations" subtitle="Rooms, racks and shelves inside warehouses" onNew={() => setEditing({})}>
+    <section className="fade-in">
+      <PageHeader
+        title="Locations"
+        subtitle="Rooms, racks and shelves inside warehouses"
+        onNew={() => setEditing({})}
+      >
         <Select
           placeholder="All warehouses"
           options={warehouseOptions}
           value={warehouse}
-          onChange={(e) => setSearchParams(e.target.value ? { warehouse: e.target.value } : {})}
+          onChange={(e) =>
+            setSearchParams(e.target.value ? { warehouse: e.target.value } : {})
+          }
           aria-label="Warehouse"
         />
       </PageHeader>
+
       <Table
         columns={columns}
         rows={data}
         loading={loading}
         error={error}
         onRetry={reload}
-        empty={<EmptyState title="No locations" message="Add racks, rooms or shelves to a warehouse." />}
+        empty={
+          <EmptyState
+            title="No locations"
+            message="Add racks, rooms or shelves to a warehouse."
+            icon="box"
+            action={
+              <Button variant="outline" size="sm" icon="plus" onClick={() => setEditing({})}>
+                New location
+              </Button>
+            }
+          />
+        }
       />
-      {editing && (
+
+      {editing !== null && (
         <LocationModal
           location={editing}
           defaultWarehouse={warehouse}
@@ -162,10 +234,11 @@ export default function LocationsPage() {
           onSaved={onSaved}
         />
       )}
+
       <ConfirmDialog
         open={Boolean(deleting)}
         title="Delete location?"
-        message={`${deleting?.fullName} will be deleted. Locations with stock or history cannot be deleted.`}
+        message={`${deleting?.fullName} will be permanently deleted. Locations with stock or history cannot be deleted.`}
         confirmLabel="Delete"
         tone="danger"
         loading={busy}

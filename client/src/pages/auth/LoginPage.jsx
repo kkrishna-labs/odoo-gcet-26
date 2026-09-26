@@ -1,3 +1,4 @@
+import { KeyRound, LogIn } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import Button from '../../components/ui/Button.jsx';
 import Form from '../../components/ui/Form.jsx';
@@ -26,8 +27,16 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-lg font-semibold text-text-strong">Sign in</h1>
-      <p className="mb-5 text-sm text-muted">Welcome back to StockSense.</p>
+      <div className="mb-6 flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-muted border border-accent/20">
+          <LogIn className="h-5 w-5 text-accent" />
+        </span>
+        <div>
+          <h1 className="text-lg font-bold text-text-strong">Welcome back</h1>
+          <p className="text-xs text-muted">Sign in to your StockSense account</p>
+        </div>
+      </div>
+
       <Form onSubmit={onSubmit}>
         {form.formError && <Alert>{form.formError}</Alert>}
         <Input
@@ -37,6 +46,7 @@ export default function LoginPage() {
           onChange={form.setField('loginId')}
           error={form.errors.loginId}
           autoFocus
+          placeholder="Enter your login ID"
         />
         <Input
           label="Password"
@@ -45,20 +55,24 @@ export default function LoginPage() {
           value={form.values.password}
           onChange={form.setField('password')}
           error={form.errors.password}
+          placeholder="••••••••"
         />
-        <Button type="submit" className="w-full" loading={form.submitting}>
-          SIGN IN
+        <Button type="submit" className="mt-1 w-full" size="lg" loading={form.submitting}>
+          <LogIn className="h-4 w-4" />
+          Sign In
         </Button>
       </Form>
-      <p className="mt-5 text-center text-sm text-muted">
-        <Link to={PATHS.FORGOT_PASSWORD} className="text-accent hover:underline">
+
+      <div className="mt-6 flex items-center justify-between text-sm">
+        <Link to={PATHS.FORGOT_PASSWORD} className="text-accent hover:underline text-xs flex items-center gap-1">
+          <KeyRound className="h-3 w-3" />
           Forgot password?
         </Link>
-        <span className="px-2">|</span>
-        <Link to={PATHS.SIGNUP} className="text-accent hover:underline">
-          Sign up
+        <Link to={PATHS.SIGNUP} className="text-xs text-muted hover:text-accent transition-colors">
+          No account?{' '}
+          <span className="text-accent font-medium">Sign up</span>
         </Link>
-      </p>
+      </div>
     </>
   );
 }

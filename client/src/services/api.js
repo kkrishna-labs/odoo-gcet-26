@@ -2,9 +2,9 @@ import axios from 'axios';
 import { TOKEN_STORAGE_KEY, UNAUTHORIZED_EVENT } from '../utils/constants.js';
 import { readStorage } from '../utils/storage.js';
 
-const baseURL = import.meta.env.VITE_API_URL;
-if (!baseURL) {
-  console.error('[api] VITE_API_URL is not set. Copy client/.env.example to client/.env.');
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+if (!import.meta.env.VITE_API_URL) {
+  console.warn('[api] VITE_API_URL not explicitly set, defaulting to http://localhost:5000/api');
 }
 
 /**

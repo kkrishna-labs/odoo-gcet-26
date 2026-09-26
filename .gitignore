@@ -13,6 +13,9 @@ coverage/
 .vite/
 *.tsbuildinfo
 
+# Handoff packages (generated with git archive)
+*.zip
+
 # Logs
 logs/
 *.log

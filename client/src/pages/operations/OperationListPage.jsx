@@ -90,7 +90,7 @@ export default function OperationListPage({ type }) {
   );
 
   return (
-    <section>
+    <section className="fade-in">
       <PageHeader title={cfg.title} newTo={cfg.newPath}>
         <SearchInput
           value={params.search}

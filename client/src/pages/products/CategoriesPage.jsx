@@ -1,3 +1,4 @@
+import { Tag } from 'lucide-react';
 import { useState } from 'react';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
@@ -15,13 +16,24 @@ import { required } from '../../utils/validation.js';
 
 function CategoryModal({ category, onClose, onSaved }) {
   const isNew = !category?._id;
-  const form = useForm({ name: category?.name ?? '', description: category?.description ?? '' });
-
-  const onSubmit = form.submit({ name: required('Category name') }, async (values) => {
-    const payload = { name: values.name.trim(), description: values.description.trim() };
-    const saved = isNew ? await categoryApi.create(payload) : await categoryApi.update(category._id, payload);
-    onSaved(saved, isNew);
+  const form = useForm({
+    name: category?.name ?? '',
+    description: category?.description ?? '',
   });
+
+  const onSubmit = form.submit(
+    { name: required('Category name') },
+    async (values) => {
+      const payload = {
+        name: values.name.trim(),
+        description: values.description.trim(),
+      };
+      const saved = isNew
+        ? await categoryApi.create(payload)
+        : await categoryApi.update(category._id, payload);
+      onSaved(saved, isNew);
+    }
+  );
 
   return (
     <Modal
@@ -41,8 +53,21 @@ function CategoryModal({ category, onClose, onSaved }) {
     >
       <Form id="category-form" onSubmit={onSubmit}>
         {form.formError && <Alert>{form.formError}</Alert>}
-        <Input label="Name" required value={form.values.name} onChange={form.setField('name')} error={form.errors.name} autoFocus />
-        <Textarea label="Description" value={form.values.description} onChange={form.setField('description')} />
+        <Input
+          label="Name"
+          required
+          value={form.values.name}
+          onChange={form.setField('name')}
+          error={form.errors.name}
+          autoFocus
+          placeholder="e.g. Electronics"
+        />
+        <Textarea
+          label="Description"
+          value={form.values.description}
+          onChange={form.setField('description')}
+          placeholder="Optional description…"
+        />
       </Form>
     </Modal>
   );
@@ -76,38 +101,95 @@ export default function CategoriesPage() {
   };
 
   const columns = [
-    { key: 'name', header: 'Name', render: (c) => <span className="font-medium text-text-strong">{c.name}</span> },
-    { key: 'description', header: 'Description', render: (c) => c.description || '—' },
-    { key: 'productCount', header: 'Products', align: 'right' },
+    {
+      key: 'name',
+      header: 'Name',
+      render: (c) => (
+        <div className="flex items-center gap-3">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-3 border border-border text-muted">
+            <Tag className="h-3.5 w-3.5" />
+          </span>
+          <span className="font-semibold text-text-strong">{c.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      render: (c) => (
+        <span className="text-sm text-muted">{c.description || '—'}</span>
+      ),
+    },
+    {
+      key: 'productCount',
+      header: 'Products',
+      align: 'right',
+      render: (c) => (
+        <span className="tabular-nums font-medium text-text-strong">{c.productCount ?? 0}</span>
+      ),
+    },
     {
       key: 'actions',
       header: '',
       align: 'right',
       render: (c) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="sm" icon="edit" onClick={() => setEditing(c)} aria-label={`Edit ${c.name}`} />
-          <Button variant="ghost" size="sm" icon="trash" onClick={() => setDeleting(c)} aria-label={`Delete ${c.name}`} />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="edit"
+            onClick={(e) => { e.stopPropagation(); setEditing(c); }}
+            aria-label={`Edit ${c.name}`}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="trash"
+            onClick={(e) => { e.stopPropagation(); setDeleting(c); }}
+            aria-label={`Delete ${c.name}`}
+          />
         </div>
       ),
     },
   ];
 
   return (
-    <section>
-      <PageHeader title="Product Categories" onNew={() => setEditing({})} />
+    <section className="fade-in">
+      <PageHeader
+        title="Product Categories"
+        subtitle="Group products to filter stock and dashboard views"
+        onNew={() => setEditing({})}
+      />
       <Table
         columns={columns}
         rows={data}
         loading={loading}
         error={error}
         onRetry={reload}
-        empty={<EmptyState title="No categories yet" message="Group products by category to filter stock and the dashboard." />}
+        empty={
+          <EmptyState
+            title="No categories yet"
+            message="Group products by category to filter stock and the dashboard."
+            icon="box"
+            action={
+              <Button variant="outline" size="sm" icon="plus" onClick={() => setEditing({})}>
+                New category
+              </Button>
+            }
+          />
+        }
       />
-      {editing && <CategoryModal category={editing} onClose={() => setEditing(null)} onSaved={onSaved} />}
+      {editing !== null && (
+        <CategoryModal
+          category={editing}
+          onClose={() => setEditing(null)}
+          onSaved={onSaved}
+        />
+      )}
       <ConfirmDialog
         open={Boolean(deleting)}
         title="Delete category?"
-        message={`"${deleting?.name}" will be deleted. Categories that still have products cannot be deleted.`}
+        message={`"${deleting?.name}" will be permanently deleted. Categories with products cannot be deleted.`}
         confirmLabel="Delete"
         tone="danger"
         loading={busy}

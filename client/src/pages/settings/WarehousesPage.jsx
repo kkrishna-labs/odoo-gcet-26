@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { Building2, Edit2, MapPin, Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import Form from '../../components/ui/Form.jsx';
@@ -93,15 +94,39 @@ export default function WarehousesPage() {
   };
 
   const columns = [
-    { key: 'name', header: 'Name', render: (w) => <span className="font-medium text-text-strong">{w.name}</span> },
-    { key: 'code', header: 'Short code' },
+    {
+      key: 'name',
+      header: 'Name',
+      render: (w) => (
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-3 border border-border text-muted">
+            <Building2 className="h-3.5 w-3.5" />
+          </span>
+          <span className="font-semibold text-text-strong">{w.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'code',
+      header: 'Short code',
+      render: (w) => (
+        <span className="rounded-md border border-border bg-surface-3 px-2 py-0.5 text-xs font-mono text-text-strong">
+          {w.code}
+        </span>
+      ),
+    },
     { key: 'address', header: 'Address', render: (w) => w.address || '—' },
     {
       key: 'locationCount',
       header: 'Locations',
       align: 'right',
       render: (w) => (
-        <Link to={`${PATHS.LOCATIONS}?warehouse=${w._id}`} className="text-accent hover:underline">
+        <Link
+          to={`${PATHS.LOCATIONS}?warehouse=${w._id}`}
+          className="inline-flex items-center gap-1 text-accent hover:underline text-sm font-medium"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MapPin className="h-3 w-3" />
           {w.locationCount}
         </Link>
       ),
@@ -112,15 +137,27 @@ export default function WarehousesPage() {
       align: 'right',
       render: (w) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="sm" icon="edit" onClick={() => setEditing(w)} aria-label={`Edit ${w.name}`} />
-          <Button variant="ghost" size="sm" icon="trash" onClick={() => setDeleting(w)} aria-label={`Delete ${w.name}`} />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="edit"
+            onClick={(e) => { e.stopPropagation(); setEditing(w); }}
+            aria-label={`Edit ${w.name}`}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="trash"
+            onClick={(e) => { e.stopPropagation(); setDeleting(w); }}
+            aria-label={`Delete ${w.name}`}
+          />
         </div>
       ),
     },
   ];
 
   return (
-    <section>
+    <section className="fade-in">
       <PageHeader title="Warehouses" subtitle="Warehouse details and short codes" onNew={() => setEditing({})} />
       <Table
         columns={columns}

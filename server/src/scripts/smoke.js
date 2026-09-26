@@ -93,6 +93,36 @@ async function run() {
   check('ledger entries', ledger.total, 4);
   const summary = await ok('GET', `/dashboard/summary?warehouse=${wh._id}`);
   check('dashboard pending deliveries', summary.deliveries.pending, 1);
+  check('dashboard waiting deliveries', summary.deliveries.waiting, 1);
+
+  // Dashboard KPIs must match the product list for the same warehouse
+  const byStatus = async (stockStatus) =>
+    (await ok('GET', `/products?warehouse=${wh._id}&stockStatus=${stockStatus}&limit=100`)).total;
+  const inWarehouse = (await ok('GET', `/products?warehouse=${wh._id}&limit=100`)).items.filter((p) => p.onHand > 0).length;
+  const allSummary = await ok('GET', `/dashboard/summary?warehouse=${wh._id}`);
+  check('KPI in stock = products with stock', allSummary.products.inStock, inWarehouse);
+  check('KPI low stock = low filter', allSummary.products.lowStock, await byStatus('low'));
+  check('KPI out of stock = out filter', allSummary.products.outOfStock, await byStatus('out'));
+
+  // Category filter (products + dashboard)
+  const category = await ok('POST', '/categories', { name: `Smoke ${tag}` });
+  await ok('PATCH', `/products/${product._id}`, { category: category._id, reorderLevel: 100 });
+  const inCategory = await ok('GET', `/products?category=${category._id}`);
+  check('category filter', inCategory.total === 1 && inCategory.items[0]._id === product._id, true);
+  check('reorder rule marks low stock', inCategory.items[0].stockStatus, 'low');
+  const catSummary = await ok('GET', `/dashboard/summary?category=${category._id}`);
+  check('dashboard category filter: products', catSummary.products.total, 1);
+  check('dashboard category filter: low stock alert', catSummary.lowStockItems[0]?._id, product._id);
+  check('dashboard category filter: pending deliveries', catSummary.deliveries.pending, 1);
+
+  // Search and status filters
+  check('SKU search', (await ok('GET', `/products?search=steel-${tag.toLowerCase()}`)).total, 1);
+  check('receipt search by reference', (await ok('GET', `/receipts?search=${encodeURIComponent(receipt.reference)}`)).total, 1);
+  const waitingOps = await ok('GET', `/dashboard/operations?type=delivery&status=waiting&warehouse=${wh._id}`);
+  check('operations filter type+status', waitingOps.items.every((r) => r.type === 'delivery' && r.status === 'waiting') && waitingOps.total === 1, true);
+  check('ledger warehouse filter', (await ok('GET', `/ledger?warehouse=${wh._id}`)).total, 4);
+  check('ledger direction filter (out)', (await ok('GET', `/ledger?warehouse=${wh._id}&direction=out`)).total, 2);
+
   check('unauthenticated request rejected', (token = null, (await call('GET', '/products')).status), 401);
 }
 

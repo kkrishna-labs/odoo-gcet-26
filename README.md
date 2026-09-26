@@ -118,6 +118,7 @@ stocksense/
 │       └── server.js          entry: connect DB, start HTTP server
 ├── docs/
 │   ├── API.md                 API contract (source of truth)
+│   ├── QA.md                  end-to-end test report
 │   └── MOCKUP_NOTES.md        requirements read from the mockup
 ├── HANDOFF.md                 current stage, next steps
 └── package.json               root scripts (install:all, dev, build)

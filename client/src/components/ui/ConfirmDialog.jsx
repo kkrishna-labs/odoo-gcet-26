@@ -1,7 +1,7 @@
 import Button from './Button.jsx';
 import Modal from './Modal.jsx';
 
-/** Yes/no confirmation built on Modal. tone="danger" styles the confirm button as destructive. */
+/** Confirmation dialog built on Modal. tone="danger" styles the confirm button as destructive. */
 export default function ConfirmDialog({
   open,
   title = 'Are you sure?',
@@ -24,13 +24,17 @@ export default function ConfirmDialog({
           <Button variant="secondary" onClick={onClose} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
+          <Button
+            variant={tone === 'danger' ? 'danger' : 'primary'}
+            onClick={onConfirm}
+            loading={loading}
+          >
             {confirmLabel}
           </Button>
         </>
       }
     >
-      <div className="text-sm text-text">{message}</div>
+      <div className="text-sm text-text leading-relaxed">{message}</div>
     </Modal>
   );
 }
